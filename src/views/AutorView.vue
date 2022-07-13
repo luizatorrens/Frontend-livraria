@@ -1,29 +1,27 @@
 <script>
-import { v4 as uuid } from "uuid";
+import axios from "axios";
 export default {
   data() {
     return {
       novo_autor: "",
-      autores: [
-        { id: "f12bc7ce-5ca7-4cbf-ac6e-be3e59cb2862", name: "Autor 1" },
-        { id: "b880659d-5d33-4607-ae19-8a22a738b509", name: "Autor 2" },
-        { id: "0f97fea6-72ac-4ee0-bf1b-92516d3417e1", name: "Autor 3" },
-        { id: "25c441be-e90a-4847-98a7-0d888e4c981f", name: "Autor 4" },
-      ],
+      autores: [],
     };
   },
+    async created() {
+    const autores = await axios.get("http://localhost:4000/autores");
+    this.autores = autores.data;
+  },
   methods: {
-    salvar() {
-      if (this.novo_autor !== "") {
-        const novo_id = uuid();
-        this.autores.push({
-          id: novo_id,
-          name: this.novo_autor,
-        });
-        this.novo_autor = "";
-      }
+    async salvar() {
+      const autor = {
+        nome: this.novo_autor,
+      };
+      const autor_criado = await axios.post("http://localhost:4000/autores", autor);
+      this.autores.push(autor_criado.data);
+      this.novo_autor = "";
     },
-    excluir(autor) {
+     async excluir(autor) {
+      await axios.delete(`http://localhost:4000/autores/${autor.id}`);
       const indice = this.autores.indexOf(autor);
       this.autores.splice(indice, 1);
     },
@@ -63,7 +61,7 @@ export default {
         <tbody>
           <tr v-for="autor in autores" :key="autor.id">
             <td>{{ autor.id }}</td>
-            <td>{{ autor.name }}</td>
+            <td>{{ autor.nome }}</td>
 
             <td class="button-group d-flex salvar_editar">
               <button class="btn btn-primary" @click="alerta(livro)">Editar</button>
