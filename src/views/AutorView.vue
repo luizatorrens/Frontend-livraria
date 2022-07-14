@@ -20,11 +20,11 @@ export default {
       this.autores.push(autor_criado.data);
       this.novo_autor = "";
     },
-     async excluir(autor) {
-      await axios.delete(`http://localhost:4000/autores/${autor.id}`);
-      const indice = this.autores.indexOf(autor);
-      this.autores.splice(indice, 1);
-    },
+    async excluir(autor){
+      await axios.delete(`http://localhost:4000/autores/${autor.id}`)
+      const indice = this.autores.indexOf(autor)
+      this.autores.splice (indice,1);},
+      
     alerta() {
       alert("Ok!");
     },
@@ -64,8 +64,8 @@ export default {
             <td>{{ autor.nome }}</td>
 
             <td class="button-group d-flex salvar_editar">
-              <button class="btn btn-primary" @click="alerta(livro)">Editar</button>
-              <button class="btn btn-danger" @click="excluir(livro)">Excluir</button>
+              <button class="btn btn-primary" @click="alerta(autor)">Editar</button>
+              <button class="btn btn-danger" @click="excluir(autor)">Excluir</button>
             </td>
           </tr>
         </tbody>

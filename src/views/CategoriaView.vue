@@ -1,5 +1,5 @@
 <script>
-import { v4 as uuid } from "uuid";
+import axios from "axios";
 export default {
   data() {
     return {
@@ -7,21 +7,28 @@ export default {
       categorias: [],
     };
   },
+  async created() {
+    const categorias = await axios.get("http://localhost:4000/categorias");
+    this.categorias = categorias.data;
+  },
   methods: {
-    salvar() {
-      if (this.nova_categoria !== "") {
-        const novo_id = uuid();
-        this.categorias.push({
-          id: novo_id,
-          categoria: this.nova_categoria,
-        });
-        this.nova_categoria = "";
-      }
+    async salvar() {
+      const categoria = {
+        nome: this.nova_categoria,
+      };
+      const categoria_criada = await axios.post(
+        "http://localhost:4000/categorias",
+        categoria
+      );
+      this.categorias.push(categoria_criada.data);
+      this.nova_categoria = "";
     },
-    excluir(categoria) {
+    async excluir(categoria) {
+      await axios.delete(`http://localhost:4000/categorias/${categoria.id}`);
       const indice = this.categorias.indexOf(categoria);
       this.categorias.splice(indice, 1);
     },
+
     alerta() {
       alert("Ok!");
     },
@@ -32,19 +39,17 @@ export default {
 <template>
   <div class="position-absolute top-50 start-50 translate-middle">
     <div class="formulario">
-      <div class="title">
-        <h2>Gerencimento de Categorias</h2>
+      <div>
+        <h2 class="title">Gerencimento de Categorias</h2>
       </div>
       <div class="form-input container d-flex">
-        <select class="form-select" v-model="nova_categoria">
-            <option value="" class="col form-control d-flex" disabled>Categoria</option>
-            <option value="Categoria 1">Categoria 1</option>
-            <option value="Categoria 2">Categoria 2</option>
-            <option value="Categoria 3">Categoria 3</option>
-            <option value="Categoria 4">Categoria 4</option>
-            <option value="Categoria 5">Categoria 5</option>
-          </select>
-
+        <input
+          class="col-10"
+          type="text"
+          v-model="nova_categoria"
+          @keyup.enter="salvar"
+          placeholder="Categorias"
+        />
         <button class="btn btn_save" @click="salvar">Salvar</button>
       </div>
     </div>
@@ -61,11 +66,15 @@ export default {
         <tbody>
           <tr v-for="categoria in categorias" :key="categoria.id">
             <td>{{ categoria.id }}</td>
-            <td>{{ categoria.categoria }}</td>
+            <td>{{ categoria.nome }}</td>
 
-             <td class="button-group d-flex salvar_editar">
-              <button class="btn btn-primary" @click="alerta(livro)">Editar</button>
-              <button class="btn btn-danger" @click="excluir(livro)">Excluir</button>
+            <td class="button-group d-flex salvar_editar">
+              <button class="btn btn-primary" @click="alerta(categoria)">
+                Editar
+              </button>
+              <button class="btn btn-danger" @click="excluir(categoria)">
+                Excluir
+              </button>
             </td>
           </tr>
         </tbody>
@@ -73,4 +82,3 @@ export default {
     </div>
   </div>
 </template>
-<style></style>
