@@ -40,7 +40,7 @@ export default {
   <div class="position-absolute top-50 start-50 translate-middle">
     <div class="formulario">
       <div>
-        <h2 class="title">Gerencimento de Categorias</h2>
+        <h2 class="title">Gerencimento de Editoras</h2>
       </div>
       <div class="form-input container d-flex">
         <input

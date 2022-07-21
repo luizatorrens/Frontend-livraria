@@ -1,33 +1,64 @@
 <script>
 import axios from "axios";
+import { v4 as uuid } from "uuid";
 export default {
   data() {
     return {
-      livro: {},
       livros: [],
-      autores: [],
       categorias: [],
+      autores: [],
       editoras: [],
+      livro: {},
     };
   },
   async created() {
-    await this.buscarTodosOsAutores();
-    await this.buscarTodasAsCategorias();
-    await this.buscarTodosAsEditoras();
+    await this.BuscarTodasAsEditoras();
+    await this.BuscarTodasAsCategorias();
+    await this.BuscarTodosOsAutores();
+    const livros = await axios.get(
+      "http://localhost:4000/livros?expand=categoria&expand=editora&expand=autor"
+    );
+    this.livros = livros.data;
   },
-
   methods: {
-    async buscarTodosOsAutores() {
-      const autores = await axios.get("http://localhost:4000/autores");
-      this.autores = autores.data;
+    async BuscarTodasAsEditoras() {
+      const editoras = await axios.get("http://localhost:4000/editoras");
+      this.editoras = editoras.data;
     },
-    async buscarTodosAsCategorias() {
+    async BuscarTodasAsCategorias() {
       const categorias = await axios.get("http://localhost:4000/categorias");
       this.categorias = categorias.data;
     },
-    async buscarTodosAsEditoras() {
-      const editoras = await axios.get("http://localhost:4000/editoras");
-      this.editoras = editoras.data;
+    async BuscarTodosOsAutores() {
+      const autores = await axios.get("http://localhost:4000/autores");
+      this.autores = autores.data;
+    },
+    async salvar() {
+      const livro_criado = await axios.post(
+        "http://localhost:4000/livros",
+        this.livro
+      );
+      this.livros.push(livro_criado.data);
+      this.livro = {};
+      const livros = await axios.get(
+        "http://localhost:4000/livros?expand=categoria&expand=editora&expand=autor"
+      );
+      this.livros = livros.data;
+    },
+    async excluir(livro) {
+      await axios.delete(`http://localhost:4000/livros/${livro.id}`);
+      const indice = this.livros.indexOf(livro);
+      this.livros.splice(indice, 1);
+    },
+    async atualizarLivro(livro) {
+      const response = await axios.put(
+        `http://localhost:4000/livros/${livro.id}`,
+        livro
+      );
+      return response.data;
+    },
+    alerta() {
+      alert("ok");
     },
   },
 };
@@ -36,43 +67,69 @@ export default {
 <template>
   <div class="position-absolute top-50 start-50 translate-middle">
     <div class="formulario">
-      <div>
-        <h2 class="title" >Gerencimento de Livros</h2>
-      </div>
-      <div class="input-group container">
-        <input
-          class="col form-control d-flex"
-          type="text"
-          v-model="novo_livro"
-          @keyup.enter="salvar"
-          placeholder="Livros"
-        />
-        <input
-          class="col form-control d-flex"
-          type="text"
-          v-model="novo_autor"
+      <h2>Gerencimento de Livros</h2>
+    </div>
+    <div class="form-input container d-flex">
+      <input
+        class="col-3"
+        type="text"
+        v-model="livro.nome"
+        @keyup.enter="salvar"
+        placeholder="Livros"
+      />
+      <div class="input-group">
+        <select
+          class="form-select"
+          id="inputGroupSelect04"
+          aria-label="Example select with button addon"
+          v-model="livro.autorId"
           @keyup.enter="salvar"
           placeholder="Autores"
-        />
-        <select v-model="livro.categoriaId" @keyup.enter="salvar">
-        <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.id">
-        {{ categoria.nome }}
-        </option>
+        >
+          <option selected class="disabled" value="">Autores</option>
+          <option v-for="autor in autores" :key="autor.id" :value="autor.id">
+            {{ autor.nome }}
+          </option>
         </select>
-
-        <select class="form-select" v-model="nova_editora">
-          <option value="" class="col form-control d-flex" disabled>Editora</option>
-          <option value="Editora 1">Editora 1</option>
-          <option value="Editora 2">Editora 2</option>
-          <option value="Editora 3">Editora 3</option>
-          <option value="Editora 4">Editora 4</option>
-          <option value="Editora 5">Editora 5</option>
+        <select
+          class="form-select"
+          id="inputGroupSelect04"
+          aria-label="Example select with button addon"
+          v-model="livro.categoriaId"
+          @keyup.enter="salvar"
+          placeholder="Categorias"
+        >
+          <option selected class="disabled" value="">Categorias</option>
+          <option
+            v-for="categoria in categorias"
+            :key="categoria.id"
+            :value="categoria.id"
+          >
+            {{ categoria.nome }}
+          </option>
         </select>
-
-        <button class="btn btn_save" @click="salvar">Salvar</button>
+        <select
+          class="form-select"
+          id="inputGroupSelect04"
+          aria-label="Example select with button addon"
+          v-model="livro.editoraId"
+          @keyup.enter="salvar"
+          placeholder="Editoras"
+        >
+          <option selected class="disabled" value="">Editoras</option>
+          <option
+            v-for="editora in editoras"
+            :key="editora.id"
+            :value="editora.id"
+          >
+            {{ editora.nome }}
+          </option>
+        </select>
+        <button @click="salvar">Salvar</button>
       </div>
     </div>
-    <div class="list-items">
+
+    <div class="itens-lista">
       <table>
         <thead>
           <tr>
@@ -89,12 +146,12 @@ export default {
             <td>{{ livro.id }}</td>
             <td>{{ livro.nome }}</td>
             <td>{{ livro.autorId }}</td>
-            <td>{{ livro.categoriaId }}</td>
-            <td>{{ livro.editoraId }}</td>
+            <td>{{ livro.categoria.nome }}</td>
+            <td>{{ livro.editora.nome }}</td>
 
-            <td class="button-group d-flex salvar_editar">
-              <button class="btn btn-primary" @click="alerta(livro)">Editar</button>
-              <button class="btn btn-danger" @click="excluir(livro)">Excluir</button>
+            <td>
+              <button class="botao" @click="alerta">Editar</button>
+              <button class="botao" @click="excluir(livro)">Excluir</button>
             </td>
           </tr>
         </tbody>
@@ -103,4 +160,8 @@ export default {
   </div>
 </template>
 
-<style></style>
+<style>
+.disabled {
+  color: gray;
+}
+</style>
